@@ -1,0 +1,28 @@
+### Create Available Time Slot (POST)
+POST http://localhost:8000/api/available-time-slots
+Content-Type: application/json
+{
+  "therapist_id": 1,
+  "date": "2025-03-28",
+  "start_time": "10:00",
+  "end_time": "12:00",
+  "is_booked": false
+}
+
+### Get All Available Time Slots (GET)
+GET http://localhost:8000/api/available-time-slots
+
+### Get Single Time Slot (GET)
+GET http://localhost:8000/api/available-time-slots/1
+
+### Update Available Time Slot (PUT)
+PUT http://localhost:8000/api/available-time-slots/1
+Content-Type: application/json
+{
+  "start_time": "11:00",
+  "end_time": "13:00",
+  "is_booked": true
+}
+
+### Delete Available Time Slot (DELETE)
+DELETE http://localhost:8000/api/available-time-slots/1
