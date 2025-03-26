@@ -1,5 +1,5 @@
 ### Register Patient
-POST http://localhost:8000/api/auth/register
+POST http://localhost:8000/api/register
 Content-Type: application/json
 
 {
@@ -8,11 +8,11 @@ Content-Type: application/json
   "contact_phone": "0722227154",
   "address": "90 Kenya",
   "role": "patient",
-  "password": "2003Secure!"
+  "password": "cyrus1234"
 }
 
 ### Register Therapist
-POST http://localhost:8000/api/auth/register
+POST http://localhost:8000/api/register
 Content-Type: application/json
 
 {
@@ -27,7 +27,7 @@ Content-Type: application/json
 }
 
 ### Register Admin
-POST http://localhost:8000/api/auth/register
+POST http://localhost:8000/api/register
 Content-Type: application/json
 
 {
@@ -40,10 +40,10 @@ Content-Type: application/json
 }
 
 ### Login User
-POST http://localhost:8000/api/auth/login
+POST http://localhost:8000/api/login
 Content-Type: application/json
 
 {
   "email": "kimtaicyrus@gmail.com",
-  "password": "2003Secure!"
+  "password": "cyrus1234"
 }
