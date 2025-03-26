@@ -134,6 +134,8 @@ export const resources = pgTable("resources", {
 });
 
 // Relations
+
+// bookings has many sessions
 export const usersRelations = relations(users, ({ many, one }) => ({
   authentication: one(authentication),
   availableTimeSlots: many(availableTimeSlots),
@@ -144,6 +146,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   feedback: many(feedback),
 }));
 
+// authentication has one user
 export const authenticationRelations = relations(authentication, ({ one }) => ({
   user: one(users, {
     fields: [authentication.user_id],
@@ -151,6 +154,7 @@ export const authenticationRelations = relations(authentication, ({ one }) => ({
   }),
 }));
 
+// availableTimeSlots has many bookings
 export const availableTimeSlotsRelations = relations(availableTimeSlots, ({ one, many }) => ({
   therapist: one(users, {
     fields: [availableTimeSlots.therapist_id],
@@ -159,6 +163,7 @@ export const availableTimeSlotsRelations = relations(availableTimeSlots, ({ one,
   bookings: many(bookings),
 }));
 
+// bookings has one user (patient) and one therapist
 export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   patient: one(users, {
     fields: [bookings.user_id],
@@ -179,6 +184,7 @@ export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   messages: many(messages),
 }));
 
+// sessions has one booking and many diagnostics and feedback
 export const sessionsRelations = relations(sessions, ({ one, many }) => ({
   booking: one(bookings, {
     fields: [sessions.booking_id],
@@ -188,6 +194,7 @@ export const sessionsRelations = relations(sessions, ({ one, many }) => ({
   feedback: many(feedback),
 }));
 
+// feedback has one session and one user
 export const diagnosticsRelations = relations(diagnostics, ({ one }) => ({
   session: one(sessions, {
     fields: [diagnostics.session_id],
@@ -195,6 +202,7 @@ export const diagnosticsRelations = relations(diagnostics, ({ one }) => ({
   }),
 }));
 
+// feedback has one session and one user
 export const feedbackRelations = relations(feedback, ({ one }) => ({
   session: one(sessions, {
     fields: [feedback.session_id],
@@ -206,6 +214,7 @@ export const feedbackRelations = relations(feedback, ({ one }) => ({
   }),
 }));
 
+// resources has many feedback
 export const mpesaTransactionsRelations = relations(mpesaTransactions, ({ one }) => ({
   booking: one(bookings, {
     fields: [mpesaTransactions.booking_id],
@@ -213,6 +222,7 @@ export const mpesaTransactionsRelations = relations(mpesaTransactions, ({ one })
   }),
 }));
 
+// resources has many feedback
 export const messagesRelations = relations(messages, ({ one }) => ({
   sender: one(users, {
     fields: [messages.sender_id],
@@ -258,23 +268,42 @@ export function createAvailableTimeSlots(
 }
 
 // Type Inference
+//users table
 export type TIUsers = typeof users.$inferInsert;
 export type TSUsers = typeof users.$inferSelect;
+
+// authentication table
 export type TIAuthentication = typeof authentication.$inferInsert;
 export type TSAuthentication = typeof authentication.$inferSelect;
+
+// messages table
 export type TIMessages = typeof messages.$inferInsert;
 export type TSMessages = typeof messages.$inferSelect;
+
+// available_time_slots table
 export type TIAvailableTimeSlots = typeof availableTimeSlots.$inferInsert;
 export type TSAvailableTimeSlots = typeof availableTimeSlots.$inferSelect;
+
+// bookings table
 export type TIBookings = typeof bookings.$inferInsert;
 export type TSBookings = typeof bookings.$inferSelect;
+
+// feedback table
 export type TISessions = typeof sessions.$inferInsert;
 export type TSSessions = typeof sessions.$inferSelect;
+
+// diagnostics table
 export type TIDiagnostics = typeof diagnostics.$inferInsert;
 export type TSDiagnostics = typeof diagnostics.$inferSelect;
+
+// feedback table
 export type TIFeedback = typeof feedback.$inferInsert;
 export type TSFeedback = typeof feedback.$inferSelect;
+
+// mpesa_transactions table
 export type TIMpesaTransactions = typeof mpesaTransactions.$inferInsert;
 export type TSMpesaTransactions = typeof mpesaTransactions.$inferSelect;
+
+// resources table
 export type TIResources = typeof resources.$inferInsert;
 export type TSResources = typeof resources.$inferSelect;
