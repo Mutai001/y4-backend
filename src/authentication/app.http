@@ -1,15 +1,15 @@
-
+//authentication/app.http
 ###
 POST http://localhost:8000/api/register
 Content-Type: application/json
 
 {
 
-  "full_name": "Christine Rian ",
-  "email": "riyan99@gmail.com",
-  "contact_phone": "0799087188",
+  "full_name": "cyrus Kimutai ",
+  "email": "kimtaicyrus@gmail.com",
+  "contact_phone": "0722227154",
   "address": "90 kenya",
-  "role": "admin",
+  "role": "patient",
   "password": "2003"
 }
 ###

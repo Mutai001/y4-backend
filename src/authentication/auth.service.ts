@@ -1,3 +1,4 @@
+//auth.service.ts
 import {Authentication, users,TIAuthentication, TIUsers  } from "../drizzle/schema";
 import db from "../drizzle/db";
 import { sql } from "drizzle-orm";
