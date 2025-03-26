@@ -36,19 +36,18 @@ userRouter.put("/users/:id", updateUser);
 // ✅ Delete a user
 userRouter.delete("/users/:id", deleteUser);
 
-// ✅ Configure Nodemailer
+// ✅ Configure Nodemailer for Google Meet link notifications
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  secure: true, // Ensure SSL/TLS
+  secure: true,
   tls: {
-    rejectUnauthorized: false, // Consider for development, not recommended for production
+    rejectUnauthorized: false,
   },
 });
-
 
 // ✅ Therapist sends Google Meet link
 userRouter.post("/send-meet-link", async (c) => {
