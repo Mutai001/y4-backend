@@ -1,4 +1,4 @@
-//available-time-slots.service.ts
+//timeSlot.service.ts (Business Logic)
 
 import { db } from "../drizzle/db";
 import { availableTimeSlots, type TIAvailableTimeSlots } from "../drizzle/schema";
@@ -25,6 +25,7 @@ export class TimeSlotService {
       where: and(
         eq(availableTimeSlots.therapist_id, therapistId),
         eq(availableTimeSlots.date, date)
+      )
     });
   }
 
