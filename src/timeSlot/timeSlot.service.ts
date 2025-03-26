@@ -10,7 +10,7 @@ export class TimeSlotService {
   static async createTimeSlots(therapistId: number, date: Date, customSlots?: Array<{start: string, end: string}>) {
     const slotsToCreate = (customSlots || DEFAULT_TIME_SLOTS).map(slot => ({
       therapist_id: therapistId,
-      date,
+      date: date.toISOString(),
       start_time: slot.start,
       end_time: slot.end,
       is_booked: false
@@ -24,7 +24,7 @@ export class TimeSlotService {
     return await db.query.availableTimeSlots.findMany({
       where: and(
         eq(availableTimeSlots.therapist_id, therapistId),
-        eq(availableTimeSlots.date, date)
+        eq(availableTimeSlots.date, date.toISOString())
       )
     });
   }
@@ -53,8 +53,8 @@ export class TimeSlotService {
     return await db.query.availableTimeSlots.findMany({
       where: and(
         eq(availableTimeSlots.therapist_id, therapistId),
-        gte(availableTimeSlots.date, startDate),
-        lte(availableTimeSlots.date, endDate),
+        gte(availableTimeSlots.date, startDate.toISOString()),
+        lte(availableTimeSlots.date, endDate.toISOString()),
         eq(availableTimeSlots.is_booked, false)
       )
     });
