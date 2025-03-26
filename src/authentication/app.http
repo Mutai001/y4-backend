@@ -1,94 +1,49 @@
-//authentication/app.http
-###
-POST http://localhost:8000/api/register
+### Register Patient
+POST http://localhost:8000/api/auth/register
 Content-Type: application/json
 
 {
-
-  "full_name": "cyrus Kimutai ",
+  "full_name": "Cyrus Kimutai",
   "email": "kimtaicyrus@gmail.com",
   "contact_phone": "0722227154",
-  "address": "90 kenya",
+  "address": "90 Kenya",
   "role": "patient",
-  "password": "2003"
+  "password": "2003Secure!"
 }
-###
-###
-POST http://localhost:8000/api/register
+
+### Register Therapist
+POST http://localhost:8000/api/auth/register
 Content-Type: application/json
 
 {
-
-  "full_name": "Kim Smith ",
-  "email": "smith@example.com",
+  "full_name": "Jane Smith",
+  "email": "jane.smith@therapy.com",
   "contact_phone": "0789654321",
   "address": "1950 Main St",
-  "role": "admin",
-  "password": "1999"
-}
-###
-
-POST http://localhost:8000/api/register
-Content-Type: application/json
-
-{
-  "full_name":"doreen smith",
-  "email": "doreen@example.com",
-  "contact_phone": "0788995544",
-  "address": "1950 Main ",
-  "role": "admin",
-  "password": "2000"
-}
-###
-POST http://localhost:8000/api/register
-Content-Type: application/json
-
-{
-
-  "full_name": "stine Rian ",
-  "email": "Kimri99@gmail.com",
-  "contact_phone": "0798987188",
-  "address": "499 kenya",
   "role": "therapist",
-  "password": "2993"
+  "specialization": "Cognitive Behavioral Therapy",
+  "experience_years": 5,
+  "password": "TherapyPro2023!"
 }
-###
-###
-POST http://localhost:8000/api/register
+
+### Register Admin
+POST http://localhost:8000/api/auth/register
 Content-Type: application/json
 
 {
-
-   "full_name": "John Doe",
-   "email": "john@gmail.com",
-   "contact_phone": "+1-123-456-7890",
-   "address": "123 Main St, New York, NY 10001",
-   "role": "user",
-   "password": "2093"
+  "full_name": "System Administrator",
+  "email": "admin@example.com",
+  "contact_phone": "0788995544",
+  "address": "Admin Headquarters",
+  "role": "admin",
+  "password": "AdminAccess2023!"
 }
-###
-POST    http://localhost:8000/api/login
-Content-Type: application/json
- 
-  {  
-    "email": "Kimri99@gmail.com",
-    "password": "2993"
-  }
 
-###
-POST    http://localhost:8000/api/login
+### Login User
+POST http://localhost:8000/api/auth/login
 Content-Type: application/json
- 
-  {  
-    "email": "riyan99@gmail.com",
-    "password": "2003"
-  }
-###
-POST http://localhost:8000/api/login
-Content-Type: application/json
- 
-  {  
-    "email": "john@gmail.com",
-    "password": "2093"
-  }
 
+{
+  "email": "kimtaicyrus@gmail.com",
+  "password": "2003Secure!"
+}
