@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { db } from "../drizzle/db";
 import { messages, TIMessages, TSMessages } from "../drizzle/schema";
 
@@ -10,13 +10,13 @@ export class MessageService {
   }
 
   // Get messages by user ID (sent or received)
-  async getUserMessages(userId: number, options?: { 
-    limit?: number, 
-    offset?: number, 
-    sent?: boolean 
+  async getUserMessages(userId: number, options?: {
+    limit?: number,
+    offset?: number,
+    sent?: boolean
   }) {
     const { limit = 50, offset = 0, sent = false } = options || {};
-    
+
     const query = sent 
       ? eq(messages.sender_id, userId)
       : eq(messages.receiver_id, userId);
@@ -38,10 +38,8 @@ export class MessageService {
 
     return await db.select()
       .from(messages)
-      .where(
-        `(sender_id = ${user1Id} AND receiver_id = ${user2Id}) OR ` +
-        `(sender_id = ${user2Id} AND receiver_id = ${user1Id})`
-      )
+      .where(sql`(sender_id = ${user1Id} AND receiver_id = ${user2Id}) OR 
+                 (sender_id = ${user2Id} AND receiver_id = ${user1Id})`)
       .limit(limit)
       .offset(offset)
       .orderBy(desc(messages.created_at));
@@ -50,11 +48,12 @@ export class MessageService {
   // Mark messages as read
   async markMessagesAsRead(messageIds: number[]) {
     return await db.update(messages)
-      .set({ 
-        status: "Read", 
-        is_read: true 
+      .set({
+        status: "Read",
+        is_read: true
       })
-      .where(eq(messages.id, messageIds));
+      .where(sql`id IN (${sql.join(messageIds, sql`, `)})`)
+      .returning();
   }
 
   // Delete a message
@@ -66,17 +65,13 @@ export class MessageService {
 
   // Count unread messages for a user
   async countUnreadMessages(userId: number) {
-    const result = await db.select({ 
-      count: count() 
+    const result = await db.select({
+      count: sql`COUNT(*)`.as('count')
     })
       .from(messages)
-      .where(
-        and(
-          eq(messages.receiver_id, userId),
-          eq(messages.is_read, false)
-        )
-      );
-    return result[0]?.count || 0;
+      .where(sql`receiver_id = ${userId} AND is_read = false`);
+
+    return Number(result[0]?.count) || 0;
   }
 }
 
