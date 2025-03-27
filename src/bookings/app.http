@@ -1,11 +1,13 @@
 ### Create Booking (POST)
 POST http://localhost:8000/api/bookings
+
 Content-Type: application/json
+
 {
-  "user_id": 9,
-  "therapist_id": 3,
-  "session_date": "2025-02-05",
-  "booking_status": "Booked"
+  "user_id": 3,
+  "therapist_id": 5,
+  "slot_id": 5,  // From available slots response
+  "booking_status": "Pending"
 }
 
 ### Get All Bookings (GET)

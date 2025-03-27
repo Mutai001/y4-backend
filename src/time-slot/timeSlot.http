@@ -3,7 +3,7 @@ POST http://localhost:8000/api/available-time-slots
 
 Content-Type: application/json
 {
-  "therapist_id": 1,
+  "therapist_id": 3,
   "date": "2025-03-27",
   "start_time": "10:00",
   "end_time": "12:00",
