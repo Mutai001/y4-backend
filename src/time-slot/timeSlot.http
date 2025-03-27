@@ -28,3 +28,5 @@ Content-Type: application/json
 
 ### ✅ Delete Available Time Slot (DELETE)
 DELETE http://localhost:8000/api/available-time-slots/2
+
+
