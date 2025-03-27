@@ -1,5 +1,5 @@
 ### ✅ Create Available Time Slot (POST)
-POST http://localhost:8000/api/available-time-slots
+POST http://localhost:000/api/available-time-slots
 Content-Type: application/json
 
 {

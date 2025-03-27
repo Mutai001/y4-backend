@@ -4,7 +4,6 @@
 POST http://localhost:8000/api/messages
 
 Content-Type: application/json
-Authorization: Bearer YOUR_JWT_TOKEN
 
 {
   "sender_id": 1,

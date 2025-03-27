@@ -5,10 +5,11 @@ Content-Type: application/json
 
 {
   "user_id": 3,
-  "therapist_id": 5,
-  "slot_id": 5,  // From available slots response
+  "therapist_id": 3,  
+  "slot_id": 3,       
   "booking_status": "Pending"
 }
+
 
 ### Get All Bookings (GET)
 GET http://localhost:8000/api/bookings
@@ -20,7 +21,9 @@ Authorization: Bearer {your_token_here}
 
 ### Update Booking Status (PUT)
 PUT http://localhost:8000/api/bookings/1
+
 Content-Type: application/json
+
 {
   "booking_status": "Cancelled"
 }
@@ -37,11 +40,11 @@ GET http://localhost:8000/api/bookings/1
 Authorization: Bearer {your_token_here}
 
 ### Check Slot Availability (GET)
-GET http://localhost:8000/api/bookings/check-availability/5
+GET http://localhost:8000/api/bookings/check-availability/3
 Authorization: Bearer {your_token_here}
 
 ### Get Therapist Bookings (GET)
-GET http://localhost:8000/api/bookings/therapist/5
+GET http://localhost:8000/api/bookings/therapist/3
 Authorization: Bearer {your_token_here}
 
 ### Create Booking (POST)
