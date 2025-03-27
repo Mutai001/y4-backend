@@ -2,37 +2,39 @@ import { availableTimeSlots } from "../drizzle/schema";
 import db from "../drizzle/db";
 import { eq } from "drizzle-orm";
 
-// Service to fetch all available time slots
-export const getAvailableTimeSlotsService = async (limit?: number) => {
-  if (limit) {
-    return await db.query.availableTimeSlots.findMany({
-      limit: limit
-    });
-  }
-  return await db.query.availableTimeSlots.findMany();
+// ✅ Fetch all available time slots
+// export const getAvailableTimeSlotsService = async (limit?: number) => {
+//   return db.query.availableTimeSlots.findMany({
+//     ...(limit && { limit }), // Only apply limit if provided
+//   });
+// };
+export const getAvailableTimeSlotsService = async () => {
+  return await db.select().from(availableTimeSlots); // ✅ Ensure it selects all
 };
 
-// Service to fetch a single time slot by ID
+
+// ✅ Fetch a single time slot by ID
 export const getAvailableTimeSlotService = async (id: number) => {
-  return await db.query.availableTimeSlots.findFirst({
-    where: eq(availableTimeSlots.id, id)
+  return db.query.availableTimeSlots.findFirst({
+    where: eq(availableTimeSlots.id, id),
   });
 };
 
-// Service to create a new time slot
+// ✅ Create a new time slot
 export const createAvailableTimeSlotService = async (timeSlot: any) => {
-  await db.insert(availableTimeSlots).values(timeSlot);
-  return "Time Slot created successfully";
+  return await db.insert(availableTimeSlots).values(timeSlot).returning();
 };
 
-// Service to update an existing time slot by ID
+// ✅ Update an existing time slot by ID
 export const updateAvailableTimeSlotService = async (id: number, timeSlot: any) => {
-  await db.update(availableTimeSlots).set(timeSlot).where(eq(availableTimeSlots.id, id));
-  return "Time Slot updated successfully";
+  return await db
+    .update(availableTimeSlots)
+    .set(timeSlot)
+    .where(eq(availableTimeSlots.id, id))
+    .returning();
 };
 
-// Service to delete a time slot by ID
+// ✅ Delete a time slot by ID
 export const deleteAvailableTimeSlotService = async (id: number) => {
-  await db.delete(availableTimeSlots).where(eq(availableTimeSlots.id, id));
-  return "Time Slot deleted successfully";
+  return await db.delete(availableTimeSlots).where(eq(availableTimeSlots.id, id)).returning();
 };

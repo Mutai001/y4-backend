@@ -7,7 +7,7 @@ import { therapistRouter } from './therapists/therapists.router'
 import { sessionRouter } from './session/session.router'
 import { diagnosticRouter } from './diagnostics/diagnostics.router'
 import { feedbackRouter } from './feedback/feedback.router'
-import {bookingRouter } from './bookings/bookings.router'
+import {bookingsRouter } from './bookings/bookings.router'
 import {resourcesRouter} from './resources/resources.router'
 import { timeSlotRouter } from './time-slot/timeSlot.router'
 import {messageRouter} from './messaging/messaging.router'
@@ -34,7 +34,7 @@ app.route("/api",therapistRouter)
 app.route("/api",sessionRouter)
 app.route("/api",diagnosticRouter)
 app.route("/api", feedbackRouter)
-app.route("/api", bookingRouter)
+app.route("/api", bookingsRouter)
 app.route("/api", resourcesRouter)
 app.route("/api", timeSlotRouter)
 app.route("/api", messageRouter)

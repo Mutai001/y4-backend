@@ -1,76 +1,67 @@
 import { Context } from "hono";
-import { BookingsService, getBookingsService, createBookingsService, updateBookingsService, deleteBookingsService } from "./bookings.service";
+import { bookingsSchema } from "./validator";
+import { BookingsService } from "./bookings.service";
 
-// Controller to get a list of bookings
-export const listBookings = async (c: Context) => {
-  try {
-    const limit = Number(c.req.query('limit'));
-    const data = await BookingsService(limit);
-    if (data == null || data.length == 0) {
-      return c.text("Bookings not found", 404);
+export const bookingsController = {
+  async list(c: Context) {
+    try {
+      const limit = c.req.query('limit') ? Number(c.req.query('limit')) : undefined;
+      const bookings = await BookingsService.getAll(limit);
+      return c.json(bookings);
+    } catch (error) {
+      return c.json({ error: (error as Error).message }, 500);
     }
-    return c.json(data, 200);
-  } catch (error: any) {
-    return c.json({ error: error?.message }, 400);
-  }
-};
+  },
 
-// Controller to get a single booking by ID
-export const getBookings = async (c: Context) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) return c.text("Invalid ID", 400);
+  async get(c: Context) {
+    try {
+      const id = Number(c.req.param('id'));
+      if (isNaN(id)) return c.json({ error: 'Invalid ID' }, 400);
 
-  const booking = await getBookingsService(id);
-  if (booking == undefined) {
-    return c.text("Booking not found", 404);
-  }
-  return c.json(booking, 200);
-};
+      const booking = await BookingsService.getById(id);
+      if (!booking) return c.json({ error: 'Booking not found' }, 404);
+      return c.json(booking);
+    } catch (error) {
+      return c.json({ error: (error as Error).message }, 500);
+    }
+  },
 
-// Controller to create a new booking
-export const createBookings = async (c: Context) => {
-  try {
-    const booking = await c.req.json();
-    const createdBooking = await createBookingsService(booking);
+  async create(c: Context) {
+    try {
+      const data = await c.req.json();
+      const validated = bookingsSchema.parse(data);
+      const booking = await BookingsService.create(validated);
+      return c.json(booking, 201);
+    } catch (error) {
+      if ((error as any).name === 'ZodError') {
+        return c.json({ error: 'Validation failed', details: (error as any).errors }, 400);
+      }
+      return c.json({ error: (error as Error).message }, 400);
+    }
+  },
 
-    if (!createdBooking) return c.text("Booking not created", 404);
-    return c.json({ msg: createdBooking }, 201);
-  } catch (error: any) {
-    return c.json({ error: error?.message }, 400);
-  }
-};
+  async update(c: Context) {
+    try {
+      const id = Number(c.req.param('id'));
+      if (isNaN(id)) return c.json({ error: 'Invalid ID' }, 400);
 
-// Controller to update an existing booking by ID
-export const updateBookings = async (c: Context) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) return c.text("Invalid ID", 400);
+      const data = await c.req.json();
+      const booking = await BookingsService.update(id, data);
+      return c.json(booking);
+    } catch (error) {
+      return c.json({ error: (error as Error).message }, 400);
+    }
+  },
 
-  const booking = await c.req.json();
-  try {
-    const searchedBooking = await getBookingsService(id);
-    if (searchedBooking == undefined) return c.text("Booking not found", 404);
-    const res = await updateBookingsService(id, booking);
-    if (!res) return c.text("Booking not updated", 404);
+  async delete(c: Context) {
+    try {
+      const id = Number(c.req.param('id'));
+      if (isNaN(id)) return c.json({ error: 'Invalid ID' }, 400);
 
-    return c.json({ msg: res }, 201);
-  } catch (error: any) {
-    return c.json({ error: error?.message }, 400);
-  }
-};
-
-// Controller to delete a booking by ID
-export const deleteBookings = async (c: Context) => {
-  const id = Number(c.req.param("id"));
-  if (isNaN(id)) return c.text("Invalid ID", 400);
-
-  try {
-    const booking = await getBookingsService(id);
-    if (booking == undefined) return c.text("Booking not found", 404);
-    const res = await deleteBookingsService(id);
-    if (!res) return c.text("Booking not deleted", 404);
-
-    return c.json({ msg: res }, 201);
-  } catch (error: any) {
-    return c.json({ error: error?.message }, 400);
+      await BookingsService.delete(id);
+      return c.json({ message: 'Booking deleted' });
+    } catch (error) {
+      return c.json({ error: (error as Error).message }, 400);
+    }
   }
 };

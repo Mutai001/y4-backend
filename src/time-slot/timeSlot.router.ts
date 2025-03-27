@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import {
   listAvailableTimeSlots,
-  getAvailableTimeSlot,
+  getSingleTimeSlot,
   createAvailableTimeSlot,
   updateAvailableTimeSlot,
   deleteAvailableTimeSlot
@@ -11,25 +11,23 @@ import { timeSlotSchema } from "./timeSlot.validator";
 
 export const timeSlotRouter = new Hono();
 
-// Get all available time slots
-timeSlotRouter.get("/available-time-slots", listAvailableTimeSlots);
+timeSlotRouter.get("/available-time-slots", listAvailableTimeSlots); // ✅ CORRECT
 
-// Get a single time slot by ID
-timeSlotRouter.get("/available-time-slots/:id", getAvailableTimeSlot);
+timeSlotRouter.get("/available-time-slots/:id", getSingleTimeSlot); // ✅ For a single slot
 
-// Create a new time slot
+// ✅ Create a new time slot
 timeSlotRouter.post(
   "/available-time-slots",
-  zValidator('json', timeSlotSchema, (result, c) => {
-    if (!result.success) {
-      return c.json(result.error, 400);
-    }
-  }),
+  zValidator("json", timeSlotSchema),
   createAvailableTimeSlot
 );
 
-// Update an existing time slot by ID
-timeSlotRouter.put("/available-time-slots/:id", updateAvailableTimeSlot);
+// ✅ Update an existing time slot by ID
+timeSlotRouter.put(
+  "/available-time-slots/:id",
+  zValidator("json", timeSlotSchema.partial()), // Allow partial updates
+  updateAvailableTimeSlot
+);
 
-// Delete a time slot by ID
+// ✅ Delete a time slot by ID
 timeSlotRouter.delete("/available-time-slots/:id", deleteAvailableTimeSlot);

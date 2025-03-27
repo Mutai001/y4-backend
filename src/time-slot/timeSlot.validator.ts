@@ -7,3 +7,4 @@ export const timeSlotSchema = z.object({
   end_time: z.string(),
   is_booked: z.boolean().default(false),
 });
+

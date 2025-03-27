@@ -7,75 +7,91 @@ import {
   deleteAvailableTimeSlotService
 } from "./timeSlot.service";
 
-// Controller to get all available time slots
+// ✅ Get all available time slots
+// export const listAvailableTimeSlots = async (c: Context) => {
+//   try {
+//     const limit = Number(c.req.query("limit")) || undefined;
+//     const timeSlots = await getAvailableTimeSlotsService(limit);
+
+//     if (!timeSlots || timeSlots.length === 0) {
+//       return c.json({ message: "No available time slots found" }, 404);
+//     }
+
+//     return c.json(timeSlots, 200);
+//   } catch (error: any) {
+//     return c.json({ error: error.message }, 500);
+//   }
+// };
 export const listAvailableTimeSlots = async (c: Context) => {
   try {
-    const limit = Number(c.req.query('limit'));
-    const timeSlots = await getAvailableTimeSlotsService(limit);
-    if (timeSlots == null || timeSlots.length === 0) {
-      return c.text("No available time slots found", 404);
+    const timeSlots = await getAvailableTimeSlotsService();
+
+    if (!timeSlots.length) {
+      return c.json({ message: "No available time slots found", data: [] }, 200);
     }
-    return c.json(timeSlots, 200);
+
+    return c.json({ message: "Available time slots retrieved", data: timeSlots }, 200);
   } catch (error: any) {
-    return c.json({ error: error.message }, 400);
+    return c.json({ error: error.message }, 500);
   }
 };
 
-// Controller to get a single time slot by ID
-export const getAvailableTimeSlot = async (c: Context) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) return c.text("Invalid ID", 400);
+
+
+// ✅ Get a single time slot by ID
+export const getSingleTimeSlot = async (c: Context) => {
+  const id = Number(c.req.param("id"));
+  if (isNaN(id)) return c.json({ error: "Invalid ID" }, 400);
 
   const timeSlot = await getAvailableTimeSlotService(id);
   if (!timeSlot) {
-    return c.text("Time Slot not found", 404);
+    return c.json({ error: "Time Slot not found" }, 404);
   }
   return c.json(timeSlot, 200);
 };
 
-// Controller to create a new time slot
+// ✅ Create a new time slot
 export const createAvailableTimeSlot = async (c: Context) => {
   try {
     const timeSlot = await c.req.json();
     const createdTimeSlot = await createAvailableTimeSlotService(timeSlot);
-    if (!createdTimeSlot) return c.text("Time Slot not created", 404);
-    return c.json({ msg: createdTimeSlot }, 201);
+
+    return c.json({ message: "Time Slot created successfully", data: createdTimeSlot }, 201);
   } catch (error: any) {
-    return c.json({ error: error.message }, 400);
+    return c.json({ error: error.message }, 500);
   }
 };
 
-// Controller to update an existing time slot by ID
+// ✅ Update an existing time slot by ID
 export const updateAvailableTimeSlot = async (c: Context) => {
-  const id = parseInt(c.req.param("id"));
-  if (isNaN(id)) return c.text("Invalid ID", 400);
+  const id = Number(c.req.param("id"));
+  if (isNaN(id)) return c.json({ error: "Invalid ID" }, 400);
 
-  const timeSlot = await c.req.json();
   try {
-    const timeSlotToUpdate = await getAvailableTimeSlotService(id);
-    if (!timeSlotToUpdate) return c.text("Time Slot not found", 404);
-    const res = await updateAvailableTimeSlotService(id, timeSlot);
-    if (!res) return c.text("Time Slot not updated", 404);
+    const updatedData = await c.req.json();
+    const updatedTimeSlot = await updateAvailableTimeSlotService(id, updatedData);
 
-    return c.json({ msg: res }, 200);
+    if (!updatedTimeSlot) {
+      return c.json({ error: "Time Slot not updated or not found" }, 404);
+    }
+
+    return c.json({ message: "Time Slot updated successfully", data: updatedTimeSlot }, 200);
   } catch (error: any) {
-    return c.json({ error: error.message }, 400);
+    return c.json({ error: error.message }, 500);
   }
 };
 
-// Controller to delete a time slot by ID
+// ✅ Delete a time slot by ID
 export const deleteAvailableTimeSlot = async (c: Context) => {
   const id = Number(c.req.param("id"));
-  if (isNaN(id)) return c.text("Invalid ID", 400);
+  if (isNaN(id)) return c.json({ error: "Invalid ID" }, 400);
 
   try {
-    const timeSlot = await getAvailableTimeSlotService(id);
-    if (!timeSlot) return c.text("Time Slot not found", 404);
-    const res = await deleteAvailableTimeSlotService(id);
-    if (!res) return c.text("Time Slot not deleted", 404);
+    const deleted = await deleteAvailableTimeSlotService(id);
+    if (!deleted) return c.json({ error: "Time Slot not deleted or not found" }, 404);
 
-    return c.json({ msg: res }, 200);
+    return c.json({ message: "Time Slot deleted successfully" }, 200);
   } catch (error: any) {
-    return c.json({ error: error.message }, 400);
+    return c.json({ error: error.message }, 500);
   }
 };
