@@ -2,6 +2,7 @@
 
 # Send a new message
 POST http://localhost:8000/api/messages
+
 Content-Type: application/json
 Authorization: Bearer YOUR_JWT_TOKEN
 

@@ -10,6 +10,7 @@ import { feedbackRouter } from './feedback/feedback.router'
 import {bookingRouter } from './bookings/bookings.router'
 import {resourcesRouter} from './resources/resources.router'
 import { timeSlotRouter } from './time-slot/timeSlot.router'
+import {messageRouter} from './messaging/messaging.router'
 import { serve } from '@hono/node-server'
 import {cors} from 'hono/cors'
 
@@ -36,6 +37,7 @@ app.route("/api", feedbackRouter)
 app.route("/api", bookingRouter)
 app.route("/api", resourcesRouter)
 app.route("/api", timeSlotRouter)
+app.route("/api", messageRouter)
 serve({
     fetch: app.fetch,
     port:Number(process.env.PORT)
