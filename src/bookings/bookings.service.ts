@@ -1,11 +1,11 @@
 import { TIBookings, bookings, availableTimeSlots } from "../drizzle/schema";
 import db from "../drizzle/db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export const BookingsService = {
   async getAll(limit?: number): Promise<TIBookings[]> {
     try {
-      return limit 
+      return limit
         ? await db.query.bookings.findMany({ limit })
         : await db.query.bookings.findMany();
     } catch (error) {
@@ -27,17 +27,39 @@ export const BookingsService = {
   async create(bookingData: any) {
     try {
       return await db.transaction(async (tx) => {
+        // More robust slot availability check
         const slot = await tx.query.availableTimeSlots.findFirst({
-          where: eq(availableTimeSlots.id, bookingData.slot_id)
+          where: and(
+            eq(availableTimeSlots.id, bookingData.slot_id),
+            eq(availableTimeSlots.is_booked, false)
+          )
         });
 
-        if (!slot) throw new Error('Time slot not found');
-        if (slot.is_booked) throw new Error('Time slot already booked');
+        if (!slot) {
+          throw new Error('Time slot not available or already booked');
+        }
 
+        // Check for existing conflicting bookings
+        const existingBooking = await tx.query.bookings.findFirst({
+          where: and(
+            eq(bookings.slot_id, bookingData.slot_id),
+            eq(bookings.booking_status, 'Confirmed')
+          )
+        });
+
+        if (existingBooking) {
+          throw new Error('This slot is already booked');
+        }
+
+        // Create booking
         const [booking] = await tx.insert(bookings)
-          .values(bookingData)
+          .values({
+            ...bookingData,
+            booking_status: 'Pending'  // Ensure default status
+          })
           .returning();
 
+        // Mark slot as booked
         await tx.update(availableTimeSlots)
           .set({ is_booked: true })
           .where(eq(availableTimeSlots.id, bookingData.slot_id));
@@ -54,11 +76,42 @@ export const BookingsService = {
 
   async update(id: number, bookingData: Partial<TIBookings>) {
     try {
-      const [booking] = await db.update(bookings)
-        .set(bookingData)
-        .where(eq(bookings.id, id))
-        .returning();
-      return booking;
+      return await db.transaction(async (tx) => {
+        // If updating slot, ensure new slot is available
+        if (bookingData.slot_id) {
+          const slot = await tx.query.availableTimeSlots.findFirst({
+            where: and(
+              eq(availableTimeSlots.id, bookingData.slot_id),
+              eq(availableTimeSlots.is_booked, false)
+            )
+          });
+
+          if (!slot) {
+            throw new Error('New time slot is not available');
+          }
+
+          // Update booking and slot statuses
+          const [booking] = await tx.update(bookings)
+            .set(bookingData)
+            .where(eq(bookings.id, id))
+            .returning();
+
+          // Mark old slot as unbooked if status changes
+          await tx.update(availableTimeSlots)
+            .set({ is_booked: false })
+            .where(eq(availableTimeSlots.id, slot.id));
+
+          return booking;
+        }
+
+        // Regular update without slot change
+        const [booking] = await tx.update(bookings)
+          .set(bookingData)
+          .where(eq(bookings.id, id))
+          .returning();
+
+        return booking;
+      });
     } catch (error) {
       throw new Error('Failed to update booking');
     }
@@ -66,8 +119,23 @@ export const BookingsService = {
 
   async delete(id: number) {
     try {
-      await db.delete(bookings)
-        .where(eq(bookings.id, id));
+      await db.transaction(async (tx) => {
+        // Find the booking to get slot_id before deleting
+        const booking = await tx.query.bookings.findFirst({
+          where: eq(bookings.id, id)
+        });
+
+        if (booking) {
+          // Mark the associated slot as unbooked
+          await tx.update(availableTimeSlots)
+            .set({ is_booked: false })
+            .where(eq(availableTimeSlots.id, booking.slot_id));
+
+          // Delete the booking
+          await tx.delete(bookings)
+            .where(eq(bookings.id, id));
+        }
+      });
     } catch (error) {
       throw new Error('Failed to delete booking');
     }

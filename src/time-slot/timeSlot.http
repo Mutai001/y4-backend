@@ -14,7 +14,7 @@ Content-Type: application/json
 GET http://localhost:8000/api/available-time-slots
 
 ### ✅ Get Single Time Slot (GET)
-GET http://localhost:8000/api/available-time-slots/1
+GET http://localhost:8000/api/available-time-slots/4
 
 ### ✅ Update Available Time Slot (PUT)
 PUT http://localhost:8000/api/available-time-slots/2
