@@ -62,7 +62,7 @@ import { feedbackRouter } from "./feedback/feedback.router";
 import { bookingsRouter } from "./bookings/bookings.router";
 import { resourcesRouter } from "./resources/resources.router";
 import { timeSlotRouter } from './time-slot/timeSlot.router';
-import { messageRouter } from "./messaging/messaging.router";
+import { messageRouter  } from "./messaging/messaging.router";
 
 const app = new Hono();
 
@@ -88,7 +88,7 @@ app.route("/api/feedback", feedbackRouter);
 app.route("/api/bookings", bookingsRouter);
 app.route("/api/resources", resourcesRouter);
 app.route("/api", timeSlotRouter);
-app.route("/api/messages", messageRouter);
+app.route("/api/messages", messageRouter );
 
 // Global error handler
 app.onError((err, c) => {

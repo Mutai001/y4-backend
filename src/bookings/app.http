@@ -1,15 +1,13 @@
 ### Create Booking (POST)
 POST http://localhost:8000/api/bookings
-
 Content-Type: application/json
 
 {
   "user_id": 3,
-  "therapist_id": 3,  
-  "slot_id": 3,       
+  "therapist_id": 7,  
+  "slot_id": 10,      
   "booking_status": "Pending"
 }
-
 
 ### Get All Bookings (GET)
 GET http://localhost:8000/api/bookings
@@ -21,7 +19,6 @@ Authorization: Bearer {your_token_here}
 
 ### Update Booking Status (PUT)
 PUT http://localhost:8000/api/bookings/1
-
 Content-Type: application/json
 
 {

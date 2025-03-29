@@ -1,252 +1,153 @@
-import { TIBookings, bookings, availableTimeSlots, users } from "../drizzle/schema";
-import db from "../drizzle/db";
+import { db } from "../drizzle/db";
 import { eq, and } from "drizzle-orm";
+import { bookings, availableTimeSlots, users } from "../drizzle/schema";
+import type { BookingsSchema } from "./validator";
 
 export const BookingsService = {
-  // Fetch all bookings with an optional limit
-  async getAll(limit?: number): Promise<TIBookings[]> {
-    try {
-      const result = limit
-        ? await db.query.bookings.findMany({
-            limit,
-            with: { patient: true, therapist: true, slot: true },
-          })
-        : await db.query.bookings.findMany({
-            with: { patient: true, therapist: true, slot: true },
-          });
-
-      if (result.length === 0) {
-        console.warn('No bookings found');
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-      throw new Error('Failed to fetch bookings');
+  async validateBookingData(bookingData: BookingsSchema) {
+    // Validate required fields
+    if (!bookingData.slot_id || !bookingData.therapist_id || !bookingData.user_id) {
+      throw new Error('Missing required fields: slot_id, therapist_id, or user_id');
     }
+
+    // Check if user exists
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, bookingData.user_id),
+    });
+    if (!user) throw new Error(`User with ID ${bookingData.user_id} not found`);
+
+    // Check if therapist exists and has correct role
+    const therapist = await db.query.users.findFirst({
+      where: and(
+        eq(users.id, bookingData.therapist_id),
+        eq(users.role, 'therapist')
+      ),
+    });
+    if (!therapist) throw new Error(`Therapist with ID ${bookingData.therapist_id} not found or not a therapist`);
+
+    // Check slot exists and is available
+    const slot = await db.query.availableTimeSlots.findFirst({
+      where: and(
+        eq(availableTimeSlots.id, bookingData.slot_id),
+        eq(availableTimeSlots.therapist_id, bookingData.therapist_id),
+        eq(availableTimeSlots.is_booked, false)
+      ),
+    });
+    if (!slot) throw new Error('Time slot is not available or already booked');
   },
 
-  // Fetch a single booking by its ID
-  async getById(id: number): Promise<TIBookings | null> {
+  async create(bookingData: BookingsSchema) {
     try {
-      const booking = await db.query.bookings.findFirst({
-        where: eq(bookings.id, id),
-        with: { patient: true, therapist: true, slot: true },
-      });
+      await this.validateBookingData(bookingData);
 
-      return booking ?? null;
-    } catch (error) {
-      console.error(`Error fetching booking with ID ${id}:`, error);
-      throw new Error('Failed to fetch booking');
-    }
-  },
-
-  // Create a new booking
-  async create(bookingData: any) {
-    try {
-      return await db.transaction(async (tx) => {
-        // Validate therapist existence
-        const therapist = await tx.query.users.findFirst({
-          where: eq(users.id, bookingData.therapist_id),
-        });
-
-        if (!therapist) {
-          throw new Error('Therapist not found');
-        }
-
-        // Check if the slot is available
-        const slot = await tx.query.availableTimeSlots.findFirst({
-          where: and(
+      // Optimistically mark slot as booked
+      const updatedSlot = await db.update(availableTimeSlots)
+        .set({ is_booked: true })
+        .where(
+          and(
             eq(availableTimeSlots.id, bookingData.slot_id),
-            eq(availableTimeSlots.is_booked, false),
-            eq(availableTimeSlots.therapist_id, bookingData.therapist_id)
-          ),
-        });
+            eq(availableTimeSlots.is_booked, false)
+          )
+        )
+        .returning();
 
-        if (!slot) {
-          throw new Error('Time slot not available or already booked');
-        }
+      if (updatedSlot.length === 0) {
+        throw new Error('Time slot was booked by another request');
+      }
 
-        // Check for existing conflicting bookings
-        const existingBooking = await tx.query.bookings.findFirst({
-          where: and(
-            eq(bookings.slot_id, bookingData.slot_id),
-            eq(bookings.booking_status, 'Confirmed')
-          ),
-        });
+      // Create the booking
+      const [newBooking] = await db.insert(bookings)
+        .values(bookingData)
+        .returning();
 
-        if (existingBooking) {
-          throw new Error('This slot is already booked');
-        }
-
-        // Proceed to create booking
-        const finalBookingData = {
-          ...bookingData,
-          booking_status: bookingData.booking_status || 'Pending',
-        };
-
-        // Insert new booking
-        const [booking] = await tx.insert(bookings)
-          .values(finalBookingData)
-          .returning();
-
-        // Mark slot as booked
-        await tx.update(availableTimeSlots)
-          .set({ is_booked: true })
-          .where(eq(availableTimeSlots.id, bookingData.slot_id));
-
-        console.log('Booking created successfully:', booking);
-        return booking;
-      });
+      return newBooking;
     } catch (error) {
-      console.error('Booking creation error:', error);
-      throw new Error('Failed to create booking');
-    }
-  },
-
-  // Update an existing booking by ID
-  async update(id: number, bookingData: Partial<TIBookings>) {
-    try {
-      return await db.transaction(async (tx) => {
-        // Check if the booking exists
-        const existingBooking = await tx.query.bookings.findFirst({
-          where: eq(bookings.id, id),
-        });
-
-        if (!existingBooking) {
-          throw new Error(`Booking with ID ${id} not found`);
-        }
-
-        // If the slot is being changed, ensure new slot is available
-        if (bookingData.slot_id) {
-          const slot = await tx.query.availableTimeSlots.findFirst({
-            where: and(
-              eq(availableTimeSlots.id, bookingData.slot_id),
-              eq(availableTimeSlots.is_booked, false)
-            ),
-          });
-
-          if (!slot) {
-            throw new Error('New time slot is not available');
-          }
-
-          // Update booking and slot statuses
-          const [updatedBooking] = await tx.update(bookings)
-            .set({
-              ...bookingData,
-              updated_at: new Date(),
-            })
-            .where(eq(bookings.id, id))
-            .returning();
-
-          // Mark old slot as unbooked
-          await tx.update(availableTimeSlots)
+      console.error('Booking creation failed:', error);
+      
+      // Attempt to revert slot if booking failed
+      if (bookingData?.slot_id) {
+        try {
+          await db.update(availableTimeSlots)
             .set({ is_booked: false })
-            .where(eq(availableTimeSlots.id, existingBooking.slot_id));
-
-          // Mark new slot as booked
-          await tx.update(availableTimeSlots)
-            .set({ is_booked: true })
             .where(eq(availableTimeSlots.id, bookingData.slot_id));
-
-          console.log('Booking updated successfully:', updatedBooking);
-          return updatedBooking;
+        } catch (cleanupError) {
+          console.error('Failed to cleanup slot:', cleanupError);
         }
-
-        // Regular update without slot change
-        const [updatedBooking] = await tx.update(bookings)
-          .set({
-            ...bookingData,
-            updated_at: new Date(),
-          })
-          .where(eq(bookings.id, id))
-          .returning();
-
-        console.log('Booking updated successfully:', updatedBooking);
-        return updatedBooking;
-      });
-    } catch (error) {
-      console.error(`Error updating booking ${id}:`, error);
-      throw new Error('Failed to update booking');
+      }
+      
+      throw error;
     }
   },
 
-  // Delete a booking by ID
+  async getAll(limit?: number) {
+    return db.query.bookings.findMany({
+      limit: limit,
+      orderBy: (bookings, { desc }) => [desc(bookings.created_at)],
+      with: {
+        patient: true,
+        therapist: true,
+        slot: true
+      }
+    });
+  },
+
+  async getById(id: number) {
+    return db.query.bookings.findFirst({
+      where: eq(bookings.id, id),
+      with: {
+        patient: true,
+        therapist: true,
+        slot: true
+      }
+    });
+  },
+
+  async update(id: number, bookingData: Partial<BookingsSchema>) {
+    const [updatedBooking] = await db.update(bookings)
+      .set(bookingData)
+      .where(eq(bookings.id, id))
+      .returning();
+    return updatedBooking;
+  },
+
   async delete(id: number) {
-    try {
-      return await db.transaction(async (tx) => {
-        // Find the booking to get the slot_id before deleting
-        const booking = await tx.query.bookings.findFirst({
-          where: eq(bookings.id, id),
-        });
+    const booking = await db.query.bookings.findFirst({
+      where: eq(bookings.id, id)
+    });
 
-        if (!booking) {
-          throw new Error(`Booking with ID ${id} not found`);
-        }
-
-        // Mark the associated slot as unbooked
-        await tx.update(availableTimeSlots)
-          .set({ is_booked: false })
-          .where(eq(availableTimeSlots.id, booking.slot_id));
-
-        // Delete the booking
-        const [deletedBooking] = await tx.delete(bookings)
-          .where(eq(bookings.id, id))
-          .returning();
-
-        console.log('Booking deleted successfully:', deletedBooking);
-        return deletedBooking;
-      });
-    } catch (error) {
-      console.error(`Error deleting booking ${id}:`, error);
-      throw new Error('Failed to delete booking');
+    if (!booking) {
+      throw new Error('Booking not found');
     }
+
+    const [deletedBooking] = await db.delete(bookings)
+      .where(eq(bookings.id, id))
+      .returning();
+
+    await db.update(availableTimeSlots)
+      .set({ is_booked: false })
+      .where(eq(availableTimeSlots.id, booking.slot_id));
+
+    return deletedBooking;
   },
 
-  // Get bookings for a specific therapist
-  async getBookingsByTherapist(therapistId: number) {
-    try {
-      const therapistBookings = await db.query.bookings.findMany({
-        where: eq(bookings.therapist_id, therapistId),
-        with: { patient: true, slot: true },
-      });
-
-      if (therapistBookings.length === 0) {
-        console.warn(`No bookings found for therapist ID: ${therapistId}`);
-      }
-
-      return therapistBookings;
-    } catch (error) {
-      console.error(`Error fetching bookings for therapist ${therapistId}:`, error);
-      throw new Error('Failed to fetch therapist bookings');
-    }
-  },
-
-  // Check if a time slot is available
   async checkSlotAvailability(slotId: number) {
-    try {
-      const slot = await db.query.availableTimeSlots.findFirst({
-        where: eq(availableTimeSlots.id, slotId),
-        with: { therapist: true },
-      });
+    const slot = await db.query.availableTimeSlots.findFirst({
+      where: eq(availableTimeSlots.id, slotId),
+    });
+    return { 
+      available: !slot?.is_booked,
+      slot: slot
+    };
+  },
 
-      if (!slot) {
-        throw new Error('Slot not found');
+  async getBookingsByTherapist(therapistId: number) {
+    return db.query.bookings.findMany({
+      where: eq(bookings.therapist_id, therapistId),
+      orderBy: (bookings, { desc }) => [desc(bookings.created_at)],
+      with: {
+        patient: true,
+        slot: true
       }
-
-      return {
-        available: !slot.is_booked,
-        slot_details: {
-          id: slot.id,
-          date: slot.date,
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-          therapist: slot.therapist,
-        },
-      };
-    } catch (error) {
-      console.error(`Error checking slot availability for slot ${slotId}:`, error);
-      throw new Error('Failed to check slot availability');
-    }
+    });
   }
 };

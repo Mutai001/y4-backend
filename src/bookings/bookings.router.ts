@@ -11,19 +11,17 @@ bookingsRouter.use("*", async (c, next) => {
   await next();
 });
 
-// Get all bookings
+// Routes
 bookingsRouter.get("/", BookingsController.getAll);
-
-// Get a single booking by ID
 bookingsRouter.get("/:id", BookingsController.getById);
 
-// Create a new booking with validation
 bookingsRouter.post(
   "/",
   zValidator("json", bookingsSchema, (result, c) => {
     if (!result.success) {
       console.error("Validation Errors:", result.error.errors);
       return c.json({
+        success: false,
         error: "Validation failed",
         details: result.error.errors
       }, 400);
@@ -32,14 +30,9 @@ bookingsRouter.post(
   BookingsController.create
 );
 
-// Update a booking
 bookingsRouter.put("/:id", BookingsController.update);
-
-// Delete a booking
 bookingsRouter.delete("/:id", BookingsController.delete);
-
-// Check slot availability
 bookingsRouter.get("/check-availability/:slot_id", BookingsController.checkSlotAvailability);
-
-// Get bookings for a specific therapist
 bookingsRouter.get("/therapist/:therapist_id", BookingsController.getBookingsByTherapist);
+
+export default bookingsRouter;
