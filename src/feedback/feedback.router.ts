@@ -1,24 +1,58 @@
 import { Hono } from "hono";
-import { listfeedbacks,getfeedbacks , createfeedbacks, updatefeedbacks, deletefeedbacks } from "./feedback.controller"
 import { zValidator } from "@hono/zod-validator";
-import { feedbackSchema} from "./validator"; 
-import { adminRoleAuth } from '../middleware/bearAuth'
+import { FeedbackController } from "./feedback.controller";
+import { feedbackSchema, feedbackUpdateSchema } from "./validator";
+
 export const feedbackRouter = new Hono();
-//get all feedbacks
-feedbackRouter.get("/feedbacks",adminRoleAuth ,listfeedbacks) 
 
-//get a single therapist   api/therapist/1
-feedbackRouter.get("/feedbacks/:id",adminRoleAuth, getfeedbacks)
+// Logging middleware
+feedbackRouter.use("*", async (c, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  console.log(`${c.req.method} ${c.req.path} - ${ms}ms`);
+});
 
-// create a therapist 
-feedbackRouter.post("/feedbacks", zValidator('json', feedbackSchema, (result, c) => {
+// Main routes
+feedbackRouter.get("/", FeedbackController.getAll);
+feedbackRouter.get("/:id", FeedbackController.getById);
+feedbackRouter.get("/session/:session_id", FeedbackController.getBySession);
+feedbackRouter.get("/user/:user_id", FeedbackController.getByUser);
+
+feedbackRouter.post(
+  "/",
+  zValidator("json", feedbackSchema, (result, c) => {
     if (!result.success) {
-        return c.json(result.error, 400)
+      return c.json({
+        success: false,
+        error: "Validation failed",
+        details: result.error.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message
+        }))
+      }, 400);
     }
-}), createfeedbacks)
+  }),
+  FeedbackController.create
+);
 
-//update a therapist
-feedbackRouter.put("/feedbacks/:id", updatefeedbacks) 
+feedbackRouter.put(
+  "/:id",
+  zValidator("json", feedbackUpdateSchema, (result, c) => {
+    if (!result.success) {
+      return c.json({
+        success: false,
+        error: "Validation failed",
+        details: result.error.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message
+        }))
+      }, 400);
+    }
+  }),
+  FeedbackController.update
+);
 
-feedbackRouter.delete("/feedbacks/:id", deletefeedbacks)
+feedbackRouter.delete("/:id", FeedbackController.delete);
 
+export default feedbackRouter;

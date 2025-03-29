@@ -1,86 +1,165 @@
-
 import { Context } from "hono";
-import {feedbackService, getfeedbackService, createfeedbackService, updatefeedbackService, deletefeedbackService} from "./feedback.service";
-import*as bcrypt from "bcrypt";
-export const listfeedbacks = async (c: Context) => {
+import { FeedbackService } from "./feedback.service";
+import { feedbackSchema, feedbackUpdateSchema } from "./validator";
+import type { FeedbackSchema, FeedbackUpdateSchema } from "./validator";
+
+export const FeedbackController = {
+  async getAll(c: Context) {
     try {
-        //limit the number of feedbackss to be returned
-
-        const limit = Number(c.req.query('limit'))
-
-        const data = await feedbackService(limit);
-        if (data == null || data.length == 0) {
-            return c.text("feedbacks not found", 404)
-        }
-        return c.json(data, 200);
-    } catch (error: any) {
-        return c.json({ error: error?.message }, 400)
+      const limit = c.req.query('limit') ? Number(c.req.query('limit')) : undefined;
+      const feedbacks = await FeedbackService.getAll(limit);
+      return c.json({ success: true, data: feedbacks });
+    } catch (error) {
+      console.error('Failed to fetch feedbacks:', error);
+      return c.json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Database error'
+      }, 500 as const); // Using const assertion for status codes
     }
-}
+  },
 
-export const getfeedbacks = async (c: Context) => {
-    const id = parseInt(c.req.param("id"));
-    if (isNaN(id)) return c.text("Invalid ID", 400);
-
-    const feedbacks = await getfeedbackService(id);
-    if (feedbacks == undefined) {
-        return c.text("feedbacks not found", 404);
-    }
-    return c.json(feedbacks, 200);
-}
-export const createfeedbacks = async (c: Context) => {
+  async getById(c: Context) {
     try {
-        const feedbacks = await c.req.json();
-        // const password=feedbacks.password;
-        // const hashedPassword=await bcrypt.hash(password,10);
-        // feedbacks.password=hashedPassword;
-        const createdfeedbacks = await createfeedbackService(feedbacks);
+      const id = Number(c.req.param('id'));
+      if (isNaN(id)) return c.json({ 
+        success: false, 
+        error: 'Invalid ID format' 
+      }, 400 as const);
 
-
-        if (!createdfeedbacks) return c.text("feedbacks not created", 404);
-        return c.json({ msg: createdfeedbacks }, 201);
-
-    } catch (error: any) {
-        return c.json({ error: error?.message }, 400)
+      const feedback = await FeedbackService.getById(id);
+      return c.json({ success: true, data: feedback });
+    } catch (error) {
+      console.error('Failed to fetch feedback:', error);
+      const status = error instanceof Error && error.message.includes('not found') 
+        ? 404 as const 
+        : 500 as const;
+      return c.json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Database error'
+      }, status);
     }
-}
+  },
 
-export const updatefeedbacks = async (c: Context) => {
-    const id = parseInt(c.req.param("id"));
-    if (isNaN(id)) return c.text("Invalid ID", 400);
-
-    const feedbacks = await c.req.json();
+  async create(c: Context) {
     try {
-        // search for the feedbacks
-        const searchedfeedbacks= await getfeedbackService(id);
-        if (searchedfeedbacks == undefined) return c.text("feedbacks not found", 404);
-        // get the data and update it
-        const res = await updatefeedbackService(id, feedbacks);
-        // return a success message
-        if (!res) return c.text("feedbacks not updated", 404);
-
-        return c.json({ msg: res }, 201);
-    } catch (error: any) {
-        return c.json({ error: error?.message }, 400)
+      const rawData = await c.req.json();
+      const feedbackData = feedbackSchema.parse(rawData);
+      
+      const newFeedback = await FeedbackService.create(feedbackData);
+      return c.json({
+        success: true,
+        data: newFeedback,
+        message: 'Feedback created successfully'
+      }, 201 as const);
+    } catch (error) {
+      console.error('Failed to create feedback:', error);
+      
+      let status: 400 | 404 | 500 = 400;
+      let errorMessage = 'Failed to create feedback';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('not found')) status = 404;
+        if (error.message.includes('Database error')) status = 500;
+        errorMessage = error.message;
+      }
+      
+      return c.json({ 
+        success: false, 
+        error: errorMessage 
+      }, status);
     }
-}
+  },
 
-export const deletefeedbacks = async (c: Context) => {
-    const id = Number(c.req.param("id"));
-    if (isNaN(id)) return c.text("Invalid ID", 400);
-
+  async update(c: Context) {
     try {
-        //search for the feedbacks
-        const feedbacks = await getfeedbackService(id);
-        if (feedbacks== undefined) return c.text("feedbacks not found", 404);
-        //deleting the feedbacks
-        const res = await deletefeedbackService(id);
-        if (!res) return c.text("feedbacks not deleted", 404);
+      const id = Number(c.req.param('id'));
+      if (isNaN(id)) return c.json({ 
+        success: false, 
+        error: 'Invalid ID format' 
+      }, 400 as const);
 
-        return c.json({ msg: res }, 201);
-    } catch (error: any) {
-        return c.json({ error: error?.message }, 400)
+      const rawData = await c.req.json();
+      const updateData = feedbackUpdateSchema.parse(rawData);
+
+      const updatedFeedback = await FeedbackService.update(id, updateData);
+      return c.json({
+        success: true,
+        data: updatedFeedback,
+        message: 'Feedback updated successfully'
+      });
+    } catch (error) {
+      console.error('Failed to update feedback:', error);
+      const status = error instanceof Error && error.message.includes('not found') 
+        ? 404 as const 
+        : 400 as const;
+      return c.json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Database error'
+      }, status);
     }
-}
- 
- 
+  },
+
+  async delete(c: Context) {
+    try {
+      const id = Number(c.req.param('id'));
+      if (isNaN(id)) return c.json({ 
+        success: false, 
+        error: 'Invalid ID format' 
+      }, 400 as const);
+
+      const deletedFeedback = await FeedbackService.delete(id);
+      return c.json({
+        success: true,
+        data: deletedFeedback,
+        message: 'Feedback deleted successfully'
+      });
+    } catch (error) {
+      console.error('Failed to delete feedback:', error);
+      const status = error instanceof Error && error.message.includes('not found') 
+        ? 404 as const 
+        : 400 as const;
+      return c.json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Database error'
+      }, status);
+    }
+  },
+
+  async getBySession(c: Context) {
+    try {
+      const sessionId = Number(c.req.param('session_id'));
+      if (isNaN(sessionId)) return c.json({ 
+        success: false, 
+        error: 'Invalid session ID' 
+      }, 400 as const);
+
+      const feedbacks = await FeedbackService.getFeedbackBySession(sessionId);
+      return c.json({ success: true, data: feedbacks });
+    } catch (error) {
+      console.error('Failed to fetch session feedback:', error);
+      return c.json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Database error'
+      }, 500 as const);
+    }
+  },
+
+  async getByUser(c: Context) {
+    try {
+      const userId = Number(c.req.param('user_id'));
+      if (isNaN(userId)) return c.json({ 
+        success: false, 
+        error: 'Invalid user ID' 
+      }, 400 as const);
+
+      const feedbacks = await FeedbackService.getFeedbackByUser(userId);
+      return c.json({ success: true, data: feedbacks });
+    } catch (error) {
+      console.error('Failed to fetch user feedback:', error);
+      return c.json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Database error'
+      }, 500 as const);
+    }
+  }
+};
