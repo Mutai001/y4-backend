@@ -4,8 +4,8 @@ Content-Type: application/json
 
 {
   "user_id": 3,
-  "therapist_id": 7,  
-  "slot_id": 10,      
+  "therapist_id": 16,
+  "slot_id": 3,
   "booking_status": "Pending"
 }
 
