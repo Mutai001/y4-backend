@@ -43,6 +43,9 @@
 //     port:Number(process.env.PORT)
 //   })
 
+
+
+//index.ts
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import "dotenv/config";
@@ -76,7 +79,7 @@ app.use("*", cors({
 app.get("/", (c) => c.text("The code is okay"));
 
 // API Routes
-app.route("/api/users", userRouter);
+app.route("/api", userRouter);
 app.route("/api/auth", authRouter);
 // app.route("/api/therapists", therapistRouter);
 app.route("/api/sessions", sessionRouter);
@@ -96,7 +99,7 @@ app.onError((err, c) => {
 // Start the server
 serve({
   fetch: app.fetch,
-  port: Number(process.env.PORT) || 3000,
+  port: Number(process.env.PORT) || 8000,
 });
 
 export default app;

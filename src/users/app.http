@@ -7,7 +7,7 @@ Authorization: Bearer YOUR_JWT_TOKEN
 
 ###
 // Getting by ID
-GET http://localhost:8000/api/users/
+GET http://localhost:8000/api/users/3
 Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOnsiZnVsbF9uYW1lIjoiQ2hyaXN0aW5lIFJpYW4gIiwiY29udGFjdF9waG9uZSI6IjA3OTkwODcxODgiLCJhZGRyZXNzIjoiOTAga2VueWEiLCJpZCI6Nn0sInJvbGUiOiJhZG1pbiIsImV4cCI6MTczODE3MDI2NH0.fAIrnvN5CoQFxtORqHHxs9blFj_v3ADfQ5LNivr2An8
 ###
 
