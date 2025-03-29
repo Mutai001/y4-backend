@@ -1,4 +1,7 @@
 ###
+GET http://localhost:8000/api/diagnostics
+
+###
 POST http://localhost:8000/api/diagnostics
 Content-Type: application/json
 

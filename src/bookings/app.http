@@ -22,7 +22,7 @@ PUT http://localhost:8000/api/bookings/1
 Content-Type: application/json
 
 {
-  "booking_status": "Cancelled"
+  "booking_status": "Pending"
 }
 
 ### Delete Booking (DELETE)
@@ -58,12 +58,12 @@ Authorization: Bearer {your_token_here}
 
 ### Update Booking (PUT)
 PUT http://localhost:8000/api/bookings/1
+
 Content-Type: application/json
-Authorization: Bearer {your_token_here}
 
 {
   "booking_status": "Confirmed",
-  "slot_id": 7  // Optional: for rescheduling
+  "slot_id": 7 // Optional: for rescheduling
 }
 
 ### Delete Booking (DELETE)
