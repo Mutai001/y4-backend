@@ -90,7 +90,7 @@ app.route("/api/diagnostics", diagnosticRouter);
 app.route("/api/feedback", feedbackRouter);
 app.route("/api/bookings", bookingsRouter);
 app.route("/api/resources", resourcesRouter);
-app.route("/api/time-slots", timeSlotRouter);
+app.route("/api/time-slots", timeSlotRouter); // ✅ Fixed route
 app.route("/api/messages", messageRouter); // Fixed messages route
 app.route("/api/mpesa", mpesaRouter); // ✅ Mount Mpesa Router
 

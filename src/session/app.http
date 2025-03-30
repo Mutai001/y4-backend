@@ -1,23 +1,24 @@
 ###
-POST http://localhost:8000/api/session
+GET http://localhost:8000/api/sessions
+
+###
+POST http://localhost:8000/api/sessions
 Content-Type: application/json
 
 {
-
-    "user_id":9,
-    "therapist_id":1,
+    "user_id": 3,
+    "therapist_id": 16,
+    "book_id": 2,
     "session_date": "2025-02-05T00:00:00Z",
-    "session_notes":"The patient is improving"
+    "session_notes": "The patient is improving"
 }
 ###
-PUT http://localhost:8000/api/session/5
+PUT http://localhost:8000/api/sessions/5
 Content-Type: application/json
 
 {
-
-    "session_notes":"The patient is healing"
+    "session_notes": "The patient is healing"
 }
 ###
-
-DELETE http://localhost:8000/api/session/1
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOnsiZnVsbF9uYW1lIjoiQ2hyaXN0aW5lIFJpYW4gIiwiY29udGFjdF9waG9uZSI6IjA3OTkwODcxODgiLCJhZGRyZXNzIjoiNzAga3V0dXMiLCJpZCI6MX0sInJvbGUiOiJhZG1pbiIsImV4cCI6MTczODE2NTQ0NX0.OYB-jpwj6PAabV6osCMDkE3st8YTUosfKYijpzHEKMA
+DELETE http://localhost:8000/api/sessions/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOnsiZnVsbF9uYW1lIjoiQ2hyaXN0aW5lIFJpYW4iLCJjb250YWN0X3Bob25lIjoiMDc5OTA4NzE4OCIsImFkZHJlc3MiOiI3MCBrdXR1cyIsImlkIjoxfSwicm9sZSI6ImFkbWluIiwiZXhwIjoxNzM4MTY1NDQ1fQ.OYB-jpwj6PAabV6osCMDkE3st8YTUosfKYijpzHEKMA
