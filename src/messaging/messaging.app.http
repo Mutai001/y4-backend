@@ -15,24 +15,24 @@ Content-Type: application/json
 ###
 
 # Get user's messages (received)
-GET http://localhost:8000/users/1/messages
+GET http://localhost:8000/api/messages/users/1/messages
 Authorization: Bearer YOUR_JWT_TOKEN
 
 ###
 
 # Get user's sent messages
-GET http://localhost:8000/api/users/1/messages?sent=true
+GET http://localhost:8000/api/messages/users/1/messages?sent=true
 Authorization: Bearer YOUR_JWT_TOKEN
 
 ###
 
 # Get conversation between two users
-GET http://localhost:8000/api/conversations/1/2
+GET http://localhost:8000/api/messages/conversations/1/2
 Authorization: Bearer YOUR_JWT_TOKEN
 
 ###
 
-# Mark messages as read
+# Mark messages as readPATCH 
 PATCH http://localhost:8000/api/messages/read
 Content-Type: application/json
 Authorization: Bearer YOUR_JWT_TOKEN
@@ -41,10 +41,11 @@ Authorization: Bearer YOUR_JWT_TOKEN
   "messageIds": [1, 2, 3]
 }
 
+
 ###
 
 # Delete a message
-DELETE http://localhost:80008000/api/messages/1
+DELETE http://localhost:8000/api/messages/1
 Authorization: Bearer YOUR_JWT_TOKEN
 
 ###
