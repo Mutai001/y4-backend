@@ -1,7 +1,7 @@
-// Code for M-Pesa service class
+// File: src/mpesa/mpesa.service.ts
 import { eq } from 'drizzle-orm';
-import { db } from '../drizzle/db'; // Adjust path as needed
-import { mpesaTransactions, NewMpesaTransaction, MpesaTransaction } from '../drizzle/schema';
+import { db } from '../drizzle/db';
+import { mpesaTransactions, bookings } from '../drizzle/schema';
 import axios from 'axios';
 
 // Environment configuration for M-Pesa API
@@ -32,8 +32,7 @@ export class MpesaService {
   // Generate password for STK Push
   private generatePassword(): string {
     const timestamp = this.getTimestamp();
-    const password = Buffer.from(`${MPESA_SHORT_CODE}${MPESA_PASSKEY}${timestamp}`).toString('base64');
-    return password;
+    return Buffer.from(`${MPESA_SHORT_CODE}${MPESA_PASSKEY}${timestamp}`).toString('base64');
   }
 
   // Get current timestamp in YYYYMMDDHHmmss format
@@ -41,24 +40,40 @@ export class MpesaService {
     return new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
   }
 
+  // Format phone number
+  private formatPhoneNumber(phoneNumber: string): string {
+    return phoneNumber.startsWith('+254')
+      ? phoneNumber.substring(1)
+      : phoneNumber.startsWith('0')
+      ? `254${phoneNumber.substring(1)}`
+      : phoneNumber;
+  }
+
   // Initiate STK Push request
   async initiateSTKPush(
     phoneNumber: string,
     amount: number,
     referenceCode: string,
-    description: string
+    description: string,
+    bookingId: number
   ): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
+      // Verify booking exists
+      const booking = await db.query.bookings.findFirst({
+        where: eq(bookings.id, bookingId)
+      });
+
+      if (!booking) {
+        return {
+          success: false,
+          error: 'Booking not found'
+        };
+      }
+
       const accessToken = await this.getAccessToken();
       const timestamp = this.getTimestamp();
       const password = this.generatePassword();
-      
-      // Format phone number (remove leading 0 or +254)
-      const formattedPhone = phoneNumber.startsWith('+254')
-        ? phoneNumber.substring(1)
-        : phoneNumber.startsWith('0')
-        ? `254${phoneNumber.substring(1)}`
-        : phoneNumber;
+      const formattedPhone = this.formatPhoneNumber(phoneNumber);
 
       const requestData = {
         BusinessShortCode: MPESA_SHORT_CODE,
@@ -85,19 +100,19 @@ export class MpesaService {
         }
       );
 
-      // Store initial transaction record in database
+      // Store transaction record
       if (response.data.ResponseCode === '0') {
-        const newTransaction: NewMpesaTransaction = {
-          merchantRequestId: response.data.MerchantRequestID,
-          checkoutRequestId: response.data.CheckoutRequestID,
-          phoneNumber: formattedPhone,
+        await db.insert(mpesaTransactions).values({
+          booking_id: bookingId,
+          phone_number: formattedPhone,
           amount: amount.toString(),
-          referenceCode,
-          description,
-          transactionDate: new Date(),
-        };
-        
-        await db.insert(mpesaTransactions).values(newTransaction);
+          reference_code: referenceCode,
+          mpesa_receipt_number: null,
+          transaction_date: new Date(),
+          status: 'Pending',
+          created_at: new Date(),
+          updated_at: new Date()
+        });
       }
 
       return {
@@ -123,15 +138,10 @@ export class MpesaService {
         return false;
       }
       
-      const { MerchantRequestID, CheckoutRequestID, ResultCode, ResultDesc } = Body.stkCallback;
-      let callbackMetadata = null;
+      const { CheckoutRequestID, ResultCode, ResultDesc } = Body.stkCallback;
       let mpesaReceiptNumber = null;
       
-      // Extract metadata if transaction was successful
       if (ResultCode === 0 && Body.stkCallback.CallbackMetadata) {
-        callbackMetadata = JSON.stringify(Body.stkCallback.CallbackMetadata);
-        
-        // Find MPesa receipt number from metadata
         const receiptItem = Body.stkCallback.CallbackMetadata.Item.find(
           (item: any) => item.Name === 'MpesaReceiptNumber'
         );
@@ -145,15 +155,11 @@ export class MpesaService {
       await db
         .update(mpesaTransactions)
         .set({
-          resultCode: ResultCode,
-          resultDescription: ResultDesc,
-          isComplete: true,
-          isSuccessful: ResultCode === 0,
-          mpesaReceiptNumber,
-          callbackMetadata,
-          updatedAt: new Date(),
+          mpesa_receipt_number: mpesaReceiptNumber,
+          status: ResultCode === 0 ? 'Completed' : 'Failed',
+          updated_at: new Date(),
         })
-        .where(eq(mpesaTransactions.checkoutRequestId, CheckoutRequestID));
+        .where(eq(mpesaTransactions.reference_code, CheckoutRequestID));
       
       return true;
     } catch (error) {
@@ -162,16 +168,21 @@ export class MpesaService {
     }
   }
 
-  // Get transaction by checkout request ID
-  async getTransactionByCheckoutRequestId(checkoutRequestId: string): Promise<MpesaTransaction | null> {
+  // Get transaction by reference code
+  async getTransactionByReferenceCode(referenceCode: string) {
     try {
-      const transactions = await db
-        .select()
-        .from(mpesaTransactions)
-        .where(eq(mpesaTransactions.checkoutRequestId, checkoutRequestId))
-        .limit(1);
-      
-      return transactions.length > 0 ? transactions[0] : null;
+      return await db.query.mpesaTransactions.findFirst({
+        where: eq(mpesaTransactions.reference_code, referenceCode),
+        with: {
+          booking: {
+            with: {
+              patient: true,
+              therapist: true,
+              slot: true
+            }
+          }
+        }
+      });
     } catch (error) {
       console.error('Error fetching transaction:', error);
       return null;
@@ -179,9 +190,19 @@ export class MpesaService {
   }
 
   // Get all transactions
-  async getAllTransactions(): Promise<MpesaTransaction[]> {
+  async getAllTransactions() {
     try {
-      return await db.select().from(mpesaTransactions).orderBy(mpesaTransactions.createdAt);
+      return await db.query.mpesaTransactions.findMany({
+        with: {
+          booking: {
+            with: {
+              patient: true,
+              therapist: true
+            }
+          }
+        },
+        orderBy: (transactions, { desc }) => [desc(transactions.created_at)]
+      });
     } catch (error) {
       console.error('Error fetching all transactions:', error);
       return [];

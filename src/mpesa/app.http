@@ -6,19 +6,18 @@ Content-Type: application/json
   "phoneNumber": "254722227154",
   "amount": 1,
   "referenceCode": "TEST123",
-  "description": "Test Payment"
+  "description": "Test Payment",
+  "bookingId": 2
 }
 
-
-### Check Transaction Status (replace with actual checkoutRequestId) locally 
-GET http://localhost:8000/api/mpesa/transaction/ws_CO_DMZ_123456789_123456789
-
+### Check Transaction Status by reference code
+GET http://localhost:8000/api/mpesa/TEST123
 
 ### Get All Transactions
-GET http://localhost:8000/api/mpesa/transactions
+GET http://localhost:8000/api/mpesa
 
-#### Get All Transactions on Render
-GET https://mpesa-api-billing-system.onrender.com/api/mpesa/transactions
+### Get All Transactions on Render
+GET https://your-render-app.onrender.com/api/mpesa/
 
 ### M-Pesa Callback Simulation (for testing locally)
 POST http://localhost:8000/api/mpesa/callback
@@ -28,7 +27,7 @@ Content-Type: application/json
   "Body": {
     "stkCallback": {
       "MerchantRequestID": "b54f-471d-93d9-f7f3bf3f7c0e3044622",
-      "CheckoutRequestID": "ws_CO_02032025121645976722227154",
+      "CheckoutRequestID": "TEST123",
       "ResultCode": 0,
       "ResultDesc": "The service request is processed successfully.",
       "CallbackMetadata": {
@@ -47,7 +46,7 @@ Content-Type: application/json
           },
           {
             "Name": "PhoneNumber",
-            "Value": 254712345678
+            "Value": 254722227154
           }
         ]
       }
