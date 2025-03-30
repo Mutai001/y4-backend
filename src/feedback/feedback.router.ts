@@ -23,14 +23,17 @@ feedbackRouter.post(
   "/",
   zValidator("json", feedbackSchema, (result, c) => {
     if (!result.success) {
-      return c.json({
-        success: false,
-        error: "Validation failed",
-        details: result.error.issues.map(issue => ({
-          field: issue.path.join('.'),
-          message: issue.message
-        }))
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          error: "Validation failed",
+          details: result.error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+        400
+      );
     }
   }),
   FeedbackController.create
@@ -40,14 +43,17 @@ feedbackRouter.put(
   "/:id",
   zValidator("json", feedbackUpdateSchema, (result, c) => {
     if (!result.success) {
-      return c.json({
-        success: false,
-        error: "Validation failed",
-        details: result.error.issues.map(issue => ({
-          field: issue.path.join('.'),
-          message: issue.message
-        }))
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          error: "Validation failed",
+          details: result.error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+        400
+      );
     }
   }),
   FeedbackController.update

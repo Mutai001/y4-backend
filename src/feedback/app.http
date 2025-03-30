@@ -1,8 +1,8 @@
 ###
-GET http://localhost:8000/api/feedbacks
+GET http://localhost:8000/api/feedback
 
 ###
-POST http://localhost:8000/api/feedbacks
+POST http://localhost:8000/api/feedback
 Content-Type: application/json
 
 {
@@ -14,7 +14,7 @@ Content-Type: application/json
 
 }
 ###
-PUT http://localhost:8000/api/feedbacks/3
+PUT http://localhost:8000/api/feedback/3
 Content-Type: application/json
 
 {
@@ -23,4 +23,4 @@ Content-Type: application/json
 }
 ###
 
-DELETE http://localhost:8000/api/feedbacks/3
+DELETE http://localhost:8000/api/feedback/3
