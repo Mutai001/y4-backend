@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { listUsers, getUser, createUser, updateUser, deleteUser } from "./users.controller";
 import { usersSchema } from "./validator";
 import { adminRoleAuth } from "../middleware/bearAuth";
-import { db } from "../drizzle/db"; // Your Drizzle DB connection
+import { db } from "../drizzle/db";
 import { users, bookings } from "../drizzle/schema";
 import nodemailer from "nodemailer";
 import { eq } from "drizzle-orm";
@@ -14,14 +14,14 @@ dotenv.config();
 export const userRouter = new Hono();
 
 // ✅ Get all users
-userRouter.get("/users", listUsers);
+userRouter.get("/", listUsers);
 
-// ✅ Get a single user (e.g., /api/users/1)
-userRouter.get("/users/:id", getUser);
+// ✅ Get a single user
+userRouter.get("/:id", getUser);
 
 // ✅ Create a user
 userRouter.post(
-  "/users",
+  "/",
   zValidator("json", usersSchema, (result, c) => {
     if (!result.success) {
       return c.json(result.error, 400);
@@ -31,10 +31,10 @@ userRouter.post(
 );
 
 // ✅ Update a user
-userRouter.put("/users/:id", updateUser);
+userRouter.put("/:id", updateUser);
 
 // ✅ Delete a user
-userRouter.delete("/users/:id", deleteUser);
+userRouter.delete("/:id", deleteUser);
 
 // ✅ Configure Nodemailer for Google Meet link notifications
 const transporter = nodemailer.createTransport({
