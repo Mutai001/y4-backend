@@ -44,7 +44,7 @@
 //   })
 
 
-
+//index.ts
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import "dotenv/config";
@@ -62,6 +62,7 @@ import { bookingsRouter } from "./bookings/bookings.router";
 import { resourcesRouter } from "./resources/resources.router";
 import { timeSlotRouter } from "./time-slot/timeSlot.router";
 import { messageRouter } from "./messaging/messaging.router";
+import mpesaRouter from "./mpesa/mpesa.router"; // ✅ Import Mpesa router
 
 const app = new Hono();
 
@@ -91,6 +92,7 @@ app.route("/api/bookings", bookingsRouter);
 app.route("/api/resources", resourcesRouter);
 app.route("/api/time-slots", timeSlotRouter);
 app.route("/api/messages", messageRouter); // Fixed messages route
+app.route("/api/mpesa", mpesaRouter); // ✅ Mount Mpesa Router
 
 // Global error handler
 app.onError((err, c) => {

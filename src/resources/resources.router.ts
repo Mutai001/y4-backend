@@ -1,24 +1,32 @@
 import { Hono } from "hono";
-import { listresourcess,getresourcess , createresourcess, updateresourcess, deleteresourcess } from "./resources.controller"
+import { listresourcess, getresourcess, createresourcess, updateresourcess, deleteresourcess } from "./resources.controller";
 import { zValidator } from "@hono/zod-validator";
-import { resourcesSchema} from "./validator"; 
-import { adminRoleAuth } from '../middleware/bearAuth'
+import { resourcesSchema } from "./validator";
+// import { adminRoleAuth } from '../middleware/bearAuth';
+
 export const resourcesRouter = new Hono();
-//get all resourcess
-resourcesRouter.get("/resources",adminRoleAuth ,listresourcess) 
 
-//get a single therapist   api/therapist/1
-resourcesRouter.get("/resources/:id",adminRoleAuth, getresourcess)
+// Get all resources
+resourcesRouter.get("/", 
+    // adminRoleAuth, 
+    listresourcess);
 
-// create a therapist 
-resourcesRouter.post("/resources", zValidator('json', resourcesSchema, (result, c) => {
+// Get a single resource by ID
+resourcesRouter.get("/:id",
+    //  adminRoleAuth, 
+     getresourcess);
+
+// Create a resource
+resourcesRouter.post("/", zValidator('json', resourcesSchema, (result, c) => {
     if (!result.success) {
-        return c.json(result.error, 400)
+        return c.json(result.error, 400);
     }
-}), createresourcess)
+}), createresourcess);
 
-//update a therapist
-resourcesRouter.put("/resources/:id", updateresourcess) 
+// Update a resource
+resourcesRouter.put("/:id", updateresourcess);
 
-resourcesRouter.delete("/resources/:id",adminRoleAuth, deleteresourcess)
-
+// Delete a resource
+resourcesRouter.delete("/:id", 
+    // adminRoleAuth,
+     deleteresourcess);
