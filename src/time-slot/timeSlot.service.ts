@@ -2,12 +2,6 @@ import { availableTimeSlots } from "../drizzle/schema";
 import db from "../drizzle/db";
 import { eq } from "drizzle-orm";
 
-// ✅ Fetch all available time slots
-// export const getAvailableTimeSlotsService = async (limit?: number) => {
-//   return db.query.availableTimeSlots.findMany({
-//     ...(limit && { limit }), // Only apply limit if provided
-//   });
-// };
 export const getAvailableTimeSlotsService = async () => {
   return await db.select().from(availableTimeSlots); // ✅ Ensure it selects all
 };

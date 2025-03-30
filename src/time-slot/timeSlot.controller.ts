@@ -7,21 +7,6 @@ import {
   deleteAvailableTimeSlotService
 } from "./timeSlot.service";
 
-// ✅ Get all available time slots
-// export const listAvailableTimeSlots = async (c: Context) => {
-//   try {
-//     const limit = Number(c.req.query("limit")) || undefined;
-//     const timeSlots = await getAvailableTimeSlotsService(limit);
-
-//     if (!timeSlots || timeSlots.length === 0) {
-//       return c.json({ message: "No available time slots found" }, 404);
-//     }
-
-//     return c.json(timeSlots, 200);
-//   } catch (error: any) {
-//     return c.json({ error: error.message }, 500);
-//   }
-// };
 export const listAvailableTimeSlots = async (c: Context) => {
   try {
     const timeSlots = await getAvailableTimeSlotsService();

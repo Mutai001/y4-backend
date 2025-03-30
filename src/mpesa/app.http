@@ -21,8 +21,7 @@ GET http://localhost:8000/api/mpesa/transactions
 GET https://mpesa-api-billing-system.onrender.com/api/mpesa/transactions
 
 ### M-Pesa Callback Simulation (for testing locally)
-# POST http://localhost:8000/api/mpesa/callback
-POST https://mpesa-api-billing-system.onrender.com/api/mpesa/callback
+POST http://localhost:8000/api/mpesa/callback
 Content-Type: application/json
 
 {
