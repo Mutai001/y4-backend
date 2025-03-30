@@ -1,25 +1,31 @@
 import { Hono } from "hono";
-import { listdiagnostics,getdiagnostics , creatediagnostics, updatediagnostics, deletediagnostics } from "./diagnostics.controller"
+import { listdiagnostics, getdiagnostics, creatediagnostics, updatediagnostics, deletediagnostics } from "./diagnostics.controller";
 import { zValidator } from "@hono/zod-validator";
-import { diagnosticSchema} from "./validator"; 
-import { adminRoleAuth } from '../middleware/bearAuth'
-import { therapistRoleAuth } from '../middleware/bearAuth'
+import { diagnosticSchema } from "./validator"; 
+import { adminRoleAuth } from "../middleware/bearAuth";
+import { therapistRoleAuth } from "../middleware/bearAuth";
+
 export const diagnosticRouter = new Hono();
-//get all diagnostics
-diagnosticRouter.get("/diagnostics",adminRoleAuth ,listdiagnostics) 
 
-//get a single therapist   api/therapist/1
-diagnosticRouter.get("/diagnostics/:id",adminRoleAuth, getdiagnostics)
+// Get all diagnostics
+diagnosticRouter.get("/", adminRoleAuth, listdiagnostics);
 
-// create a therapist 
-diagnosticRouter.post("/diagnostics", zValidator('json', diagnosticSchema, (result, c) => {
+// Get a single diagnostic record by ID
+diagnosticRouter.get("/:id", adminRoleAuth, getdiagnostics);
+
+// Create a diagnostic record
+diagnosticRouter.post(
+  "/",
+  zValidator("json", diagnosticSchema, (result, c) => {
     if (!result.success) {
-        return c.json(result.error, 400)
+      return c.json(result.error, 400);
     }
-}), creatediagnostics)
+  }),
+  creatediagnostics
+);
 
-//update a therapist
-diagnosticRouter.put("/diagnostics/:id", updatediagnostics) 
+// Update a diagnostic record
+diagnosticRouter.put("/:id", updatediagnostics);
 
-diagnosticRouter.delete("/diagnostics/:id",therapistRoleAuth, deletediagnostics)
-
+// Delete a diagnostic record (only therapists can delete)
+diagnosticRouter.delete("/:id", therapistRoleAuth, deletediagnostics);
