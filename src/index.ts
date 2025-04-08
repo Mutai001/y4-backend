@@ -43,8 +43,7 @@
 //     port:Number(process.env.PORT)
 //   })
 
-
-//index.ts
+// index.ts
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import "dotenv/config";
@@ -62,16 +61,21 @@ import { bookingsRouter } from "./bookings/bookings.router";
 import { resourcesRouter } from "./resources/resources.router";
 import { timeSlotRouter } from "./time-slot/timeSlot.router";
 import { messageRouter } from "./messaging/messaging.router";
-import mpesaRouter from "./mpesa/mpesa.router"; // ✅ Import Mpesa router
+import mpesaRouter from "./mpesa/mpesa.router";
 
 const app = new Hono();
 
 // Middleware
 app.use(logger());
+
+// ✅ Updated CORS configuration to include deployed frontend
 app.use(
   "*",
   cors({
-    origin: "http://localhost:5173", // Allow frontend access
+    origin: [
+      "http://localhost:5173",              // local dev
+      "https://mindful-v2.vercel.app",      // deployed frontend
+    ],
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
@@ -79,7 +83,7 @@ app.use(
 );
 
 // Health check route
-app.get("/", (c) => c.text("The code is okay"));
+app.get("/", (c) => c.json({ message: "Server is running" }, 200));
 
 // API Routes
 app.route("/api/users", userRouter);
@@ -90,9 +94,9 @@ app.route("/api/diagnostics", diagnosticRouter);
 app.route("/api/feedback", feedbackRouter);
 app.route("/api/bookings", bookingsRouter);
 app.route("/api/resources", resourcesRouter);
-app.route("/api/time-slots", timeSlotRouter); // ✅ Fixed route
-app.route("/api/messages", messageRouter); // Fixed messages route
-app.route("/api/mpesa", mpesaRouter); // ✅ Mount Mpesa Router
+app.route("/api/time-slots", timeSlotRouter);
+app.route("/api/messages", messageRouter);
+app.route("/api/mpesa", mpesaRouter);
 
 // Global error handler
 app.onError((err, c) => {
