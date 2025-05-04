@@ -68,7 +68,7 @@ const app = new Hono();
 // Middleware
 app.use(logger());
 
-// ✅ Updated CORS configuration to include deployed frontend
+// ✅ Updated CORS configuration to include deployed frontend.
 app.use(
   "*",
   cors({
